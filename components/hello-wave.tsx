@@ -3,7 +3,6 @@ import { Button, Dimensions, FlatList, Image, PermissionsAndroid, Platform, Text
 import { BleManager, Device } from 'react-native-ble-plx';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-
 export function HelloWave() {
   const [rotateAmount, setRotateAmount] = useState('0');
   const [displayRotation, setDisplayRotation] = useState(0);
