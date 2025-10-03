@@ -3,6 +3,7 @@ import { Button, Dimensions, FlatList, Image, PermissionsAndroid, Platform, Text
 import { BleManager, Device } from 'react-native-ble-plx';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+
 export function HelloWave() {
   const [rotateAmount, setRotateAmount] = useState('0');
   const [displayRotation, setDisplayRotation] = useState(0);
@@ -18,11 +19,11 @@ export function HelloWave() {
         if (Platform.OS === 'android') {
           if (Platform.Version >= 31) {
             const perms = [
-              PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
-              PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
-              PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+              PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+              PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             ];
-            const statuses = await requestMultiple(perms);
+            const statuses = await PermissionsAndroid.requestMultiple(perms);
             setBtLog(prev => prev + (prev ? '\n' : '') + `Permission statuses: ${JSON.stringify(statuses)}`);
           } else {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
@@ -33,8 +34,8 @@ export function HelloWave() {
             setBtLog(prev => prev + (prev ? '\n' : '') + `ACCESS_FINE_LOCATION: ${granted}`);
           }
         } else if (Platform.OS === 'ios') {
-          const statuses = await requestMultiple([PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL]);
-          setBtLog(prev => prev + (prev ? '\n' : '') + `iOS permission statuses: ${JSON.stringify(statuses)}`);
+          // const statuses = await Permissions.requestMultiple([PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL]);
+          // setBtLog(prev => prev + (prev ? '\n' : '') + `iOS permission statuses: ${JSON.stringify(statuses)}`);
         }
       } catch (err: any) {
         setBtLog(prev => prev + (prev ? '\n' : '') + `Permission request error: ${err?.message || err}`);
