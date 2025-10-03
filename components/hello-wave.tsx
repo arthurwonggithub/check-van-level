@@ -8,14 +8,20 @@ export function HelloWave() {
   const [displayRotation, setDisplayRotation] = useState(0);
   const rotation = useSharedValue(0);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [btLog, setBtLog] = useState<string>('');
   const bleManager = new BleManager();
 
   useEffect(() => { 
-  const discovered: Record<string, boolean> = {};
+    const discovered: Record<string, boolean> = {};
+    const log = (msg: string) => setBtLog(prev => prev + (prev ? '\n' : '') + msg);
     const subscription = bleManager.onStateChange((state) => {
+      log(`Bluetooth State: ${state}`);
       if (state === 'PoweredOn') {
         bleManager.startDeviceScan(null, null, (error, device) => {
-          if (error) return;
+          if (error) {
+            log(`Scan Error: ${error.message}`);
+            return;
+          }
           if (device && !discovered[device.id]) {
             discovered[device.id] = true; 
             setDevices((prev: Device[]) => [...prev, device]);
@@ -69,11 +75,29 @@ export function HelloWave() {
           keyExtractor={item => item.id}
           style={{ backgroundColor: '#222', borderRadius: 8, maxHeight: 180 }}
           renderItem={({ item }) => (
-            <View style={{ padding: 8, borderBottomWidth: 1, borderBottomColor: '#444' }}>
+            <View
+              style={{ padding: 8, borderBottomWidth: 1, borderBottomColor: '#444' }}
+              onTouchEnd={() => {
+                // Connect to device when clicked
+                item.connect()
+                  .then(() => setBtLog(prev => prev + (prev ? '\n' : '') + `Connected to ${item.name || 'Unnamed'} (${item.id})`))
+                  .catch(err => setBtLog(prev => prev + (prev ? '\n' : '') + `Connection error: ${err.message}`));
+              }}
+            >
               <Text style={{ color: 'white' }}>{item.name || 'Unnamed'} ({item.id})</Text>
             </View>
           )}
           ListEmptyComponent={<Text style={{ color: 'gray', padding: 8 }}>No devices found</Text>}
+        />
+      </View>
+      {/* Bluetooth log field */}
+      <View style={{ width: '100%', marginBottom: 16 }}>
+        <Text style={{ color: 'white', fontSize: 16, marginBottom: 4 }}>Bluetooth Log:</Text>
+        <TextInput
+          value={btLog}
+          editable={false}
+          multiline
+          style={{ backgroundColor: '#222', color: 'white', minHeight: 60, borderRadius: 8, padding: 8, fontSize: 14, borderWidth: 1, borderColor: '#444' }}
         />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24 }}>
