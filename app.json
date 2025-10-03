@@ -10,6 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
+      ,
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Used to discover and connect to nearby Bluetooth devices.",
+        "NSBluetoothPeripheralUsageDescription": "Used to communicate with Bluetooth peripherals.",
+        "UIBackgroundModes": ["bluetooth-central"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +26,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.arthurwongoz.checkvanlevel"
+      "package": "com.arthurwongoz.checkvanlevel",
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",

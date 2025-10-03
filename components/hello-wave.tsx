@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button, Dimensions, FlatList, Image, Text, TextInput, View } from 'react-native';
+import { Button, Dimensions, FlatList, Image, PermissionsAndroid, Platform, Text, TextInput, View } from 'react-native';
 import { BleManager, Device } from 'react-native-ble-plx';
+import { PERMISSIONS, requestMultiple } from 'react-native-permissions';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export function HelloWave() {
@@ -10,6 +11,37 @@ export function HelloWave() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [btLog, setBtLog] = useState<string>('');
   const bleManager = new BleManager();
+
+  // Request Bluetooth permissions on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        if (Platform.OS === 'android') {
+          if (Platform.Version >= 31) {
+            const perms = [
+              PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+              PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
+              PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+            ];
+            const statuses = await requestMultiple(perms);
+            setBtLog(prev => prev + (prev ? '\n' : '') + `Permission statuses: ${JSON.stringify(statuses)}`);
+          } else {
+            const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+              title: 'Location required',
+              message: 'Location permission is required to scan for Bluetooth devices on older Android versions.',
+              buttonPositive: 'OK',
+            });
+            setBtLog(prev => prev + (prev ? '\n' : '') + `ACCESS_FINE_LOCATION: ${granted}`);
+          }
+        } else if (Platform.OS === 'ios') {
+          const statuses = await requestMultiple([PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL]);
+          setBtLog(prev => prev + (prev ? '\n' : '') + `iOS permission statuses: ${JSON.stringify(statuses)}`);
+        }
+      } catch (err: any) {
+        setBtLog(prev => prev + (prev ? '\n' : '') + `Permission request error: ${err?.message || err}`);
+      }
+    })();
+  }, []);
 
   useEffect(() => { 
     const discovered: Record<string, boolean> = {};
