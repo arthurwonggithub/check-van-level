@@ -8,3 +8,4 @@
 4. Go to the Expo.dev website and download the apk to the phone
 5. Install the APK
 6. Open the app from the app listing
+7. Go to App Settings and give the App permission to "nearby devices"
