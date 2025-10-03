@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Dimensions, FlatList, Image, PermissionsAndroid, Platform, Text, TextInput, View } from 'react-native';
 import { BleManager, Device } from 'react-native-ble-plx';
-import { PERMISSIONS, requestMultiple } from 'react-native-permissions';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export function HelloWave() {
