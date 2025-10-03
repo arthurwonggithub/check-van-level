@@ -23,6 +23,7 @@ jobs:
         run: npm install
       - name: Build APK
         run: |
+          mkdir -p app/build/outputs/apk/release
           cd android
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/check-van-level.apk
