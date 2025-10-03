@@ -27,7 +27,7 @@ jobs:
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/check-van-level.apk
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: check-van-level.apk
           path: android/app/build/outputs/apk/release/check-van-level.apk
