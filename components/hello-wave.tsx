@@ -12,33 +12,25 @@ export function HelloWave() {
 
   const handleRotate = () => {
     const degrees = parseFloat(rotationInput) || 0;
-    rotation.value = withTiming(degrees, { duration: 500 });
+    rotation.value = withTiming(rotation.value + degrees, { duration: 1000 });
   };
 
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <View style={{ alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <Animated.Image
-        source={require('../assets/images/react-logo.png')}
-        style={[{ width: 100, height: 100, marginBottom: 16 }, animatedStyle]}
-        resizeMode="contain"
+        source={require('../assets/images/van-side-view.jpg')}
+        style={[{ width: 100, height: 100, marginBottom: 20 }, animatedStyle]}
       />
-      <TextInput
-        value={rotationInput}
-        onChangeText={setRotationInput}
-        keyboardType="numeric"
-        style={{ backgroundColor: 'white', color: 'black', width: 80, height: 40, textAlign: 'center', borderRadius: 8, marginBottom: 8, fontSize: 18 }}
-        placeholder="Degrees"
-        placeholderTextColor="#888"
-      />
-      <Button title="Rotate" onPress={handleRotate} />
-      <Animated.Text
-        style={{
-          fontSize: 28,
-          lineHeight: 32,
-          marginTop: 16,
-        }}>
-        👋
-      </Animated.Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+        <TextInput
+          value={rotationInput}
+          onChangeText={setRotationInput}
+          keyboardType="numeric"
+          style={{ backgroundColor: 'white', color: 'black', width: 80, height: 40, borderRadius: 6, textAlign: 'center', marginRight: 10, borderWidth: 1, borderColor: '#ccc' }}
+          placeholder="Degrees"
+        />
+        <Button title="Rotate" onPress={handleRotate} />
+      </View>
     </View>
   );
 }
