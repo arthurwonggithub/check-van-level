@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Dimensions, FlatList, Image, PermissionsAndroid, Platform, Text, TextInput, View } from 'react-native';
 import { BleManager, Device } from 'react-native-ble-plx';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -9,7 +9,8 @@ export function HelloWave() {
   const rotation = useSharedValue(0);
   const [devices, setDevices] = useState<Device[]>([]);
   const [btLog, setBtLog] = useState<string>('');
-  const bleManager = new BleManager();
+  const [hasPermissions, setHasPermissions] = useState(false);
+  const bleManagerRef = useRef<BleManager | null>(null);
 
   // Request Bluetooth permissions on mount
   useEffect(() => {
@@ -24,6 +25,12 @@ export function HelloWave() {
             ];
             const statuses = await PermissionsAndroid.requestMultiple(perms);
             setBtLog(prev => prev + (prev ? '\n' : '') + `Permission statuses: ${JSON.stringify(statuses)}`);
+            const ok = perms.every(p => statuses[p] === PermissionsAndroid.RESULTS.GRANTED);
+            setHasPermissions(ok);
+            if (ok) {
+              bleManagerRef.current = new BleManager();
+              setBtLog(prev => prev + (prev ? '\n' : '') + 'Permissions granted. BLE manager initialized.');
+            }
           } else {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
               title: 'Location required',
@@ -31,18 +38,36 @@ export function HelloWave() {
               buttonPositive: 'OK',
             });
             setBtLog(prev => prev + (prev ? '\n' : '') + `ACCESS_FINE_LOCATION: ${granted}`);
+            const ok = granted === PermissionsAndroid.RESULTS.GRANTED;
+            setHasPermissions(ok);
+            if (ok) {
+              bleManagerRef.current = new BleManager();
+              setBtLog(prev => prev + (prev ? '\n' : '') + 'Permissions granted. BLE manager initialized.');
+            }
           }
         } else if (Platform.OS === 'ios') {
-          // const statuses = await Permissions.requestMultiple([PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL]);
-          // setBtLog(prev => prev + (prev ? '\n' : '') + `iOS permission statuses: ${JSON.stringify(statuses)}`);
+          // For iOS, Info.plist permissions are required; assume granted for scanning and initialize BLE manager
+          setHasPermissions(true);
+          bleManagerRef.current = new BleManager();
+          setBtLog(prev => prev + (prev ? '\n' : '') + 'iOS assumed permissions via Info.plist. BLE manager initialized.');
         }
       } catch (err: any) {
         setBtLog(prev => prev + (prev ? '\n' : '') + `Permission request error: ${err?.message || err}`);
       }
     })();
+    // cleanup ble manager on unmount
+    return () => {
+      if (bleManagerRef.current) {
+        try { bleManagerRef.current.destroy(); } catch {}
+        bleManagerRef.current = null;
+      }
+    };
   }, []);
 
-  useEffect(() => { 
+  useEffect(() => {
+    if (!hasPermissions) return;
+    const bleManager = bleManagerRef.current;
+    if (!bleManager) return;
     const discovered: Record<string, boolean> = {};
     const log = (msg: string) => setBtLog(prev => prev + (prev ? '\n' : '') + msg);
     const subscription = bleManager.onStateChange((state) => {
@@ -54,7 +79,7 @@ export function HelloWave() {
             return;
           }
           if (device && !discovered[device.id]) {
-            discovered[device.id] = true; 
+            discovered[device.id] = true;
             setDevices((prev: Device[]) => [...prev, device]);
           }
         });
@@ -66,7 +91,7 @@ export function HelloWave() {
       bleManager.stopDeviceScan();
       subscription.remove();
     };
-  }, []);
+  }, [hasPermissions]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -78,12 +103,25 @@ export function HelloWave() {
   // Update displayRotation only after animation finishes
   const handleRotate = () => {
     const value = parseFloat(rotateAmount) || 0;
-    rotation.value = withTiming(rotation.value + value, { duration: 1000 }, (finished) => {
+    rotation.value = withTiming(rotation.value + value, { duration: 100 }, (finished) => {
       if (finished) {
         runOnJS(setDisplayRotation)(rotation.value);
       }
     });
   };
+
+  // Generate random rotation deltas every 200ms and apply them relative to current rotation
+  useEffect(() => {
+    const id = setInterval(() => {
+      const delta = Math.random() * 20 - 10; // -10 .. 10
+      rotation.value = withTiming(rotation.value + delta, { duration: 100 }, (finished) => {
+        if (finished) {
+          runOnJS(setDisplayRotation)(rotation.value);
+        }
+      });
+    }, 200);
+    return () => clearInterval(id as any);
+  }, []);
 
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
